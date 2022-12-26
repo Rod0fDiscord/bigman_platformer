@@ -1,0 +1,35 @@
+800x600 default screen size (preferably with adjustable screensize and borderless windowed option)
+HUD that shows
+-FPS
+-level
+-a useful hint for said level
+-in game timer
+typical platforming physics with:
+-walking (with cycling animation frames)
+-running (with cycling animation frames)
+-dashing that keeps vertical speed through it
+-jumping with varying height based on how long the button is pressed (like in mario, hollow knight, celeste, ect)
+-slidy (not a set speed, kinda like if the entire game was on ice)
+framerate independent
+progress is made by going left
+powerups:
+-permanent dash length/speed increase
+-permanent sprint speed increase
+rebindable, saveable, and loadable controls with a GUI
+progress saving:
+-powerups
+-which level the player is on
+-a reset button
+levels:
+-a few tutorial stages (to teach controls and mechanics)
+-MORE LEVELS (until i get bored of making them) (probably about 20-50)
+an end screen for when the player completes the final level
+levels would consist of:
+-thin platforms that can be jumped on
+-thick walls that can be jumped on, but cannot be walked through
+-spikes that put the player back to the beginning of the level
+procedural generation
+level editor
+
+possibly add sidescrolling?
+possibly an ending cutscene?
