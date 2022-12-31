@@ -29,6 +29,7 @@ def refresh(background_color):
     screen.blit(background, (100, 100))
     #GUI
     #GUI objects
+    screen.blit(pygame.transform.scale(assets['clear'], (50, 50)), (100, 25))
     screen.blit(pygame.transform.scale(assets['undo'], (50, 50)), (200, 25))
     screen.blit(pygame.transform.scale(assets['eraser'], (50, 50)), (300, 25))
     screen.blit(pygame.transform.scale(assets['wall'], (50, 50)), (400, 25))
@@ -36,14 +37,19 @@ def refresh(background_color):
     screen.blit(pygame.transform.scale(assets['spike_left'], (50, 50)), (600, 25))
     screen.blit(pygame.transform.scale(assets['spike_down'], (50, 50)), (700, 25))
     screen.blit(pygame.transform.scale(assets['spike_right'], (50, 50)), (800, 25))
+    screen.blit(pygame.transform.scale(assets['platform'], (50, 5)), (900, 50))
     #GUI elements
     #GUI border
+    if curr_object == current_object.clear:
+        screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (92.5, 17.5))
     if curr_object == current_object.undo:
         screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (192.5, 17.5))
     if curr_object == current_object.erase:
         screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (292.5, 17.5))
     if curr_object == current_object.wall:
         screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (392.5, 17.5))
+    if curr_object == current_object.platform:
+        screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (892.5, 17.5))
     if curr_object == current_object.spike:
         if Mouse.spike_rotation == 0:
             screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (492.5, 17.5))
@@ -54,16 +60,22 @@ def refresh(background_color):
         if Mouse.spike_rotation == 3:
             screen.blit(pygame.transform.scale(assets['border'], (65, 65)), (792.5, 17.5))
     #GUI key notations
-    screen.blit(pygame.transform.scale(assets['z_key'], (15, 15)), (200, 5))
+    screen.blit(pygame.transform.scale(assets['z_key'], (15, 15)), (215, 5))
+    screen.blit(pygame.transform.scale(assets['ctrl'], (20, 19)), (195, 1))
+    screen.blit(pygame.transform.scale(assets['bksp'], (15, 15)), (115, 5))
+    screen.blit(pygame.transform.scale(assets['ctrl'], (20, 19)), (95, 1))
     screen.blit(pygame.transform.scale(assets['backtick'], (15, 15)), (300, 5))
     screen.blit(pygame.transform.scale(assets['i1'], (15, 15)), (400, 5))
     screen.blit(pygame.transform.scale(assets['i2'], (15, 15)), (500, 5))
     screen.blit(pygame.transform.scale(assets['i3'], (15, 15)), (600, 5))
     screen.blit(pygame.transform.scale(assets['i4'], (15, 15)), (700, 5))
     screen.blit(pygame.transform.scale(assets['i5'], (15, 15)), (800, 5))
+    screen.blit(pygame.transform.scale(assets['i6'], (15, 15)), (900, 5))
     #objects
     for i in walls:
         screen.blit(pygame.transform.scale(assets['wall'], (20, 20)), walls[i])
+    for i in platforms:
+        screen.blit(pygame.transform.scale(assets['platform'], (20, 5)), platforms[i])
     for i in spikes:
         screen.blit(pygame.transform.scale(assets['spike'], (20, 20)), spikes[i])
     for i in spikes_left:
@@ -85,6 +97,7 @@ class Mouse:
         self.left_click, self.middle_click, self.right_click = self.clicking
         self.wall_count = 0
         self.spike_count = 0
+        self.platform_count = 0
         self.object_count = 0
         self.spike_rotation = 0
         self.rect_dict = {}
@@ -118,6 +131,12 @@ class Mouse:
                         walls[self.object_count] = self.x, self.y
                         self.rect_dict[self.object_count] = self.currentrect
                         self.wall_count += 1
+                        self.object_count += 1
+                    #places platforms
+                    if curr_object == current_object.platform:
+                        platforms[self.object_count] = self.x, self.y
+                        self.rect_dict[self.object_count] = self.currentrect
+                        self.platform_count += 1
                         self.object_count += 1
                     #places spikes that point up
                     if curr_object == current_object.spike and self.spike_rotation == 0:
@@ -158,8 +177,11 @@ class Mouse:
                     if collision in spikes_down:
                         spikes_down.pop(collision)
                         self.rect_dict.pop(collision)
-                    elif collision in walls:
+                    if collision in walls:
                         walls.pop(collision)
+                        self.rect_dict.pop(collision)
+                    if collision in platforms:
+                        platforms.pop(collision)
                         self.rect_dict.pop(collision)
     #undo and clear
     def clear_and_undo(self):
@@ -167,25 +189,35 @@ class Mouse:
         #undo
         if curr_object == current_object.undo and len(self.rect_dict) != 0:
             #spikes that point up
-            if max(k for k, v in self.rect_dict.items() if v != 0) in spikes:
-                spikes.pop(max(k for k, v in self.rect_dict.items() if v != 0))
-                self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            if len(spikes) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in spikes :
+                    spikes.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
             #spikes that point left
-            if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_left:
-                spikes_left.pop(max(k for k, v in self.rect_dict.items() if v != 0))
-                self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            if len(spikes_left) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_left :
+                    spikes_left.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
             #spikes that point right
-            if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_right:
-                spikes_right.pop(max(k for k, v in self.rect_dict.items() if v != 0))
-                self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            if len(spikes_right) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_right :
+                    spikes_right.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
             #spikes that point down
-            if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_down:
-                spikes_down.pop(max(k for k, v in self.rect_dict.items() if v != 0))
-                self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            if len(spikes_down) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in spikes_down :
+                    spikes_down.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
             #walls
-            if max(k for k, v in self.rect_dict.items() if v != 0) in walls:
-                walls.pop(max(k for k, v in self.rect_dict.items() if v != 0))
-                self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            if len(walls) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in walls :
+                    walls.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+            #platforms
+            if len(platforms) != 0:
+                if max(k for k, v in self.rect_dict.items() if v != 0) in platforms:
+                    platforms.pop(max(k for k, v in self.rect_dict.items() if v != 0))
+                    self.rect_dict.pop(max(k for k, v in self.rect_dict.items() if v != 0))
             #do cooldown
             curr_object = current_object.blank
             pygame.time.wait(90)
@@ -197,6 +229,7 @@ class Mouse:
             spikes_right.clear()
             spikes_down.clear()
             walls.clear()
+            platforms.clear()
             curr_object = current_object.blank
 
 
@@ -206,6 +239,7 @@ class current_object(Enum):
     erase = 0
     wall = 1
     spike = 2
+    platform = 4
     undo = 10
     clear = 11
     blank = 2147483647
@@ -213,10 +247,11 @@ class current_object(Enum):
         erase = 0
         wall = 1
         spike = 2
+        platform = 3
         undo = 10
         clear = 11
         blank = 2147483647
-        return wall, spike, erase, undo, clear, blank
+        return wall, platform, spike, erase, undo, clear, blank
 
 #GUI and hotkeys
 class GUI:
@@ -240,6 +275,8 @@ class GUI:
         if keys[pygame.K_5]:
             curr_object = current_object.spike
             Mouse.spike_rotation =  3
+        if keys[pygame.K_6]:
+            curr_object = current_object.platform
         if keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]:
             if keys[pygame.K_BACKSPACE]:
                 curr_object = current_object.clear
@@ -257,24 +294,28 @@ class GUI:
                 pygame.time.wait(100)
         #click on objects
         if Mouse.left_click:
-            if 250 > Mouse.x > 200 and Mouse.y < 80:
+            if 150 >= Mouse.x >= 100 and Mouse.y < 80:
+                curr_object = current_object.clear
+            if 250 >= Mouse.x >= 200 and Mouse.y < 80:
                 curr_object = current_object.undo
-            if 350 > Mouse.x > 300 and Mouse.y < 80:
+            if 350 >= Mouse.x >= 300 and Mouse.y < 80:
                 curr_object = current_object.erase
-            if 450 > Mouse.x > 400 and Mouse.y < 80:
+            if 450 >= Mouse.x >= 400 and Mouse.y < 80:
                 curr_object = current_object.wall
-            if 550 > Mouse.x > 500 and Mouse.y < 80:
+            if 550 >= Mouse.x >= 500 and Mouse.y < 80:
                 curr_object = current_object.spike
                 Mouse.spike_rotation = 0
-            if 650 > Mouse.x > 600 and Mouse.y < 80:
+            if 650 >= Mouse.x >= 600 and Mouse.y < 80:
                 curr_object = current_object.spike
                 Mouse.spike_rotation = 1
-            if 750 > Mouse.x > 700 and Mouse.y < 80:
+            if 750 >= Mouse.x >= 700 and Mouse.y < 80:
                 curr_object = current_object.spike
                 Mouse.spike_rotation = 2
-            if 850 > Mouse.x > 800 and Mouse.y < 80:
+            if 850 >= Mouse.x >= 800 and Mouse.y < 80:
                 curr_object = current_object.spike
                 Mouse.spike_rotation = 3
+            if 950 >= Mouse.x >= 900 and Mouse.y < 80:
+                curr_object = current_object.platform
             return curr_object
 
 
@@ -287,6 +328,7 @@ screen.fill(background_color)
 assets = load_assets(assets_path)
 background = assets['brick']
 walls = {}
+platforms = {}
 spikes = {}
 spikes_left = {}
 spikes_right = {}
@@ -294,6 +336,7 @@ spikes_down = {}
 curr_object = current_object.wall
 Mouse.__init__(Mouse)
 running = True
+pygame.display.set_caption('helpful level editor tool')
 
 #loop
 while running:
