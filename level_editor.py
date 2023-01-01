@@ -22,6 +22,59 @@ def check_for_quit():
         if event.type == pygame.QUIT:
             running = False
 
+def save():
+    if GUI.saving:
+        rect_dict_keys = Mouse.rect_dict.copy()
+        for i in rect_dict_keys:
+            rect_dict_keys[i] = None
+        for i in Mouse.rect_dict:
+            my_rect = Mouse.rect_dict[i]
+            if not isinstance(my_rect, list):
+                json_rect = [my_rect.x, my_rect.y, my_rect.width, my_rect.height]
+                Mouse.rect_dict[i] = json_rect
+        level = {
+            "spikes" : spikes,
+            "spikes_left" : spikes_left,
+            "spikes_right" : spikes_right,
+            "spikes_down" : spikes_down,
+            "walls" : walls,
+            "platforms" : platforms,
+            "rects" : Mouse.rect_dict,
+            "rect_keys" : rect_dict_keys
+            }
+        with open("levels\\level_1\\level.json", "w") as outfile:
+            json.dump(level, outfile)
+        GUI.saving = False
+
+def load():
+    global spikes
+    global walls
+    global spikes_left
+    global spikes_right
+    global spikes_down
+    global platforms
+    global rect_dict_keys
+    global level_data
+    Mouse.object_count = 0
+    with open(r"levels\level_1\level.json") as file:
+        level_data = json.load(file)
+    spikes = level_data['spikes']
+    spikes_left = level_data['spikes_left']
+    spikes_right = level_data['spikes_right']
+    spikes_down = level_data['spikes_down']
+    walls = level_data['walls']
+    platforms = level_data['platforms']
+    rect_dict_keys = level_data['rect_keys']
+    Mouse.rect_dict = level_data['rects']
+    for i in rect_dict_keys:
+        rect_dict_keys[i] = Mouse.rect_dict[i]
+    Mouse.rect_dict = rect_dict_keys.copy()
+    for i in Mouse.rect_dict:
+        Mouse.object_count +=1
+        i = pygame.Rect(Mouse.rect_dict[i])
+
+
+
 def refresh(background_color):
     #update the screen
     #background
@@ -168,19 +221,19 @@ class Mouse:
                     if collision in spikes:
                         spikes.pop(collision)
                         self.rect_dict.pop(collision)
-                    if collision in spikes_left:
+                    elif collision in spikes_left:
                         spikes_left.pop(collision)
                         self.rect_dict.pop(collision)
-                    if collision in spikes_right:
+                    elif collision in spikes_right:
                         spikes_right.pop(collision)
                         self.rect_dict.pop(collision)
-                    if collision in spikes_down:
+                    elif collision in spikes_down:
                         spikes_down.pop(collision)
                         self.rect_dict.pop(collision)
-                    if collision in walls:
+                    elif collision in walls:
                         walls.pop(collision)
                         self.rect_dict.pop(collision)
-                    if collision in platforms:
+                    elif collision in platforms:
                         platforms.pop(collision)
                         self.rect_dict.pop(collision)
     #undo and clear
@@ -282,6 +335,9 @@ class GUI:
                 curr_object = current_object.clear
             if keys[pygame.K_z]:
                 curr_object = current_object.undo
+            if keys[pygame.K_s]:
+                GUI.saving = True
+                return GUI.saving
         if keys[pygame.K_r]:
             Mouse.spike_rotation += 1
             if Mouse.spike_rotation >= 4:
@@ -335,6 +391,8 @@ spikes_right = {}
 spikes_down = {}
 curr_object = current_object.wall
 Mouse.__init__(Mouse)
+load()
+GUI.saving = False
 running = True
 pygame.display.set_caption('helpful level editor tool')
 
@@ -347,4 +405,5 @@ while running:
     Mouse.clear_and_undo(Mouse)
     GUI.hotkeys(GUI, keys)
     refresh(background_color)
+    save()
     check_for_quit()
